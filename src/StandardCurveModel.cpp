@@ -83,7 +83,7 @@ void StandardCurveModel::onStandardCurveUpdated(int index, float value)
         QModelIndex endIndex = createIndex(index, 1);   // Column 1 (Y)
 
         // Notify that both columns changed
-        emit dataChanged(startIndex, endIndex, {Qt::DisplayRole});
+        Q_EMIT dataChanged(startIndex, endIndex, {Qt::DisplayRole});
     }
 }
 

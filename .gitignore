@@ -79,4 +79,8 @@ CMakeLists.txt.user*
 .pch/
 .rcc/
 .uic/
+.cache/
 /build*/
+
+# Local libraries
+opencv-mobile-4.13.0-debian-bookworm-arm/

@@ -37,7 +37,7 @@ public:
 
     QHash<int, QByteArray> roleNames() const override;
 
-public slots:
+public Q_SLOTS:
     void onIntensityValuesUpdated(int index, float value);
     void refresh();
 };

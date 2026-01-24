@@ -21,14 +21,14 @@ void SliderHandler::changeSliderValue(int currValue)
 {
     m_currentValue = currValue;
     m_dataManager->setInitialLedIntensityValue(currValue);
-    emit m_dataManager->ledIntensityChanged();
+    Q_EMIT m_dataManager->ledIntensityChanged();
     m_updateTimer->start();
 }
 
 void SliderHandler::onUpdateTimer()
 {
     // Emit signal to hardware controller
-    emit ledIntensityRequested(m_currentValue);
+    Q_EMIT ledIntensityRequested(m_currentValue);
 }
 
 void SliderHandler::setInitialSliderValue(int value)

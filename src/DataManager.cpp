@@ -50,7 +50,7 @@ QList<QString>& DataManager::getExperimentNames()
     return m_experimentNames;
 }
 
-QList<float>& DataManager::getIntensityValuesList()
+QList<double>& DataManager::getIntensityValuesList()
 {
     return m_intensityValues;
 }
@@ -172,13 +172,13 @@ double DataManager::calculatePCREfficiency(double slope) {
 
 void DataManager::calculateStandardCurve()
 {
-    if(m_xyLogStandardCurve.size() < 5) {
+    if(m_xyLogStandardCurve.size() < 4) {
         m_rSquared = 0.0f;
         m_yIntercept = 0.0f;
         m_slope = 0.0f;
         m_percentEfficiency = 0.0f;
         m_cycleThreshold = 0;
-        m_summary = "You need at least 5 dilution points.";
+        m_summary = "You need at least 4 dilution points.";
         return;
     }
 
@@ -259,7 +259,7 @@ void DataManager::setConcentrationMultiplier(float multiplier)
     m_concentrationMultiplier = multiplier;
 }
 
-float DataManager::getIntensityValueByIndex(int index)
+double DataManager::getIntensityValueByIndex(int index)
 {
     if(index < 0 || index >= getIntensityValuesSize())
     {
@@ -268,20 +268,20 @@ float DataManager::getIntensityValueByIndex(int index)
     return m_intensityValues.at(index);
 }
 
-void DataManager::updateSensorReading(float lux)
+void DataManager::updateSensorReading(double msaMaxValue)
 {
-    if (m_currentIntensityValuesIndex < 0 || m_currentIntensityValuesIndex >= 31) {
-        throw std::runtime_error("Current index" + std::to_string(m_currentIntensityValuesIndex) + "out of range");
+    if (m_currentIntensityValuesIndex < 0) {
+        throw std::runtime_error("Current index " + std::to_string(m_currentIntensityValuesIndex) + "out of range");
     }
     
     // Update the value at the specified m_currentIntensityValuesIndex
-    m_intensityValues[m_currentIntensityValuesIndex] = lux;
+    m_intensityValues[m_currentIntensityValuesIndex] = msaMaxValue;
     auto& currentExperiment = m_experiments[m_currentExperimentName];
     try {
         if (currentExperiment.contains("light_sensor_data") && currentExperiment["light_sensor_data"].is_sequence()) {
             auto& sequence = currentExperiment["light_sensor_data"].as_seq();
             if (m_currentIntensityValuesIndex < static_cast<int>(sequence.size())) {
-                sequence[m_currentIntensityValuesIndex] = lux;
+                sequence[m_currentIntensityValuesIndex] = msaMaxValue;
             }
         }
     } catch (const std::exception& e) {
@@ -291,23 +291,23 @@ void DataManager::updateSensorReading(float lux)
     /* Reached if absolutely no exception is thrown */
     qDebug() << "DataManager: Updated m_currentIntensityValuesIndex"
              << m_currentIntensityValuesIndex
-             << "with value" << lux << "lx";
+             << "with value" << msaMaxValue << "/ 255";
 
-    emit intensityValuesUpdated(m_currentIntensityValuesIndex, lux);
+    Q_EMIT intensityValuesUpdated(m_currentIntensityValuesIndex, msaMaxValue);
 }
 
-void DataManager::addSensorReading(float lux)
+void DataManager::addSensorReading(double msaMaxValue)
 {
     // -- Update the current index and cycle through 0-30
     try {
-        updateSensorReading(lux);
+        updateSensorReading(msaMaxValue);
         /**
         * Move to next index, cycle back to 0 after 30
         * This acts as a foolproof so long as list is capped,
         * though sensor reads only until 30 (HardwareController)
         */
         m_currentIntensityValuesIndex = (m_currentIntensityValuesIndex + 1) % m_intensityValues.size();
-        emit currentIntensityValuesIndexChanged(m_currentIntensityValuesIndex);
+        Q_EMIT currentIntensityValuesIndexChanged(m_currentIntensityValuesIndex);
 
     } catch (const std::runtime_error& e) {
         qFatal("DataManager: Fatal error - %s", e.what());
@@ -482,7 +482,7 @@ void DataManager::loadCurrentExperiment()
 
     m_lastSaved = root["last_saved"].as_str();
     m_ledIntensity = root["led_intensity_level"].as_int();
-    emit ledIntensityChanged();
+    Q_EMIT ledIntensityChanged();
 
     m_maxCycle = root["max_cycle"].as_int();
     setIntensityValuesSize(m_maxCycle);
@@ -493,26 +493,26 @@ void DataManager::loadCurrentExperiment()
         int i = 0;
         for(auto& intensity: root["light_sensor_data"].as_seq())
         {
-            m_intensityValues.push_back(intensity.as_float());
+            m_intensityValues.push_back(static_cast<double>(intensity.as_float()));
             ++m_currentIntensityValuesIndex;
         }
     }
-    emit maxCycleChanged();
+    Q_EMIT maxCycleChanged();
 
     m_intensityThreshold = root["intensity_threshold"].as_float();
-    emit intensityThresholdChanged();
+    Q_EMIT intensityThresholdChanged();
 
     m_cycleThreshold = root["cycle_threshold"].as_int();
-    emit cycleThresholdChanged();
+    Q_EMIT cycleThresholdChanged();
 
     m_concentrationCoefficient = QString::number(root["concentration_coefficient"].as_float());
-    emit concentrationCoefficientChanged();
+    Q_EMIT concentrationCoefficientChanged();
 
     m_concentrationMultiplier = root["concentration_multiplier"].as_float();
-    emit concentrationMultiplierChanged();
+    Q_EMIT concentrationMultiplierChanged();
 
     m_summary = QString::fromStdString(root["summary"].as_str());
-    emit summaryChanged();
+    Q_EMIT summaryChanged();
 
     m_xyLogStandardCurve.clear();
     for(auto& point: root["standard_curve_points"].as_seq())
@@ -526,7 +526,7 @@ void DataManager::loadCurrentExperiment()
                   return a.first < b.first;
               });
     calculateStandardCurve();
-    emit xyLogStandardCurveUpdated();
+    Q_EMIT xyLogStandardCurveUpdated();
 }
 
 void DataManager::removeExperiment(const QString experimentName)

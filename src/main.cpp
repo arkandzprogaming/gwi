@@ -79,13 +79,14 @@ int main(int argc, char *argv[])
     ExperimentModel experimentModel(dataManager->getExperimentNames(), dataManager);
     StandardCurveModel standardCurveModel(dataManager);
 
-    // HardwareController hardwareController(0x23, 1, 18, &app);
-    QSharedPointer<HardwareController> hardwareController(new HardwareController(0x23, 1, 18, &app));
+    // HardwareController construction
+    QSharedPointer<HardwareController> hardwareController(new HardwareController(0, 17, 18, &app));
+
     ButtonHandler buttonHandler(dataManager, hardwareController);
 
     // SliderHandler and HardwareController connections
     QObject::connect(&sliderHandler, &SliderHandler::ledIntensityRequested,
-                     hardwareController.data(), &HardwareController::setLEDIntensity);
+                     hardwareController.data(), &HardwareController::setLedIntensity);
     
     // HardwareController and DataManager connections
     QObject::connect(hardwareController.data(), &HardwareController::sensorDataReady,

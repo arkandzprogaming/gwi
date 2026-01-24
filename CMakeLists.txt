@@ -3,7 +3,9 @@ cmake_minimum_required(VERSION 3.16)
 project(gwi VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 17)
 
+add_compile_definitions(QT_NO_KEYWORDS)
 find_package(Qt6 COMPONENTS Quick Charts VirtualKeyboard REQUIRED)
 
 # Detect if building on a RPi
@@ -15,16 +17,37 @@ else()
     message(STATUS "Building for development platform (${CMAKE_SYSTEM_PROCESSOR})")
 endif()
 
-# Only find WiringPi on an RPi
+# OpenCV and LCCV setup
 if(IS_RASPBERRY_PI)
+    # Set OpenCV_DIR
+    set(OpenCV_DIR ${CMAKE_SOURCE_DIR}/opencv-mobile-4.13.0-armlinux/arm-linux-gnueabihf/lib/cmake/opencv4)
+    
+    find_package(OpenCV REQUIRED)
+    message(STATUS "OpenCV found: ${OpenCV_DIR}")
+    message(STATUS "OpenCV libraries: ${OpenCV_LIBS}")
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(LIBCAMERA REQUIRED libcamera)
+    
+    # Find WiringPi
     find_library(WIRINGPI_LIBRARIES NAMES wiringPi)
     if(NOT WIRINGPI_LIBRARIES)
         message(FATAL_ERROR "WiringPi library not found on Raspberry Pi")
     endif()
     add_compile_definitions(HAVE_WIRINGPI)
+    add_compile_definitions(HAVE_LCCV)
+
+    include_directories(${LIBCAMERA_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 endif()
 
-# find_library(WIRINGPI_LIBRARIES NAMES wiringPi)
+# -- If Timer is used to displace DMF signals -- #
+option(USE_TIMER_MODE "Use timer instead of hardware ISR for sensor readings" ON)
+
+if(USE_TIMER_MODE)
+    add_compile_definitions(USE_TIMER)
+    message(STATUS "Build mode: TIMER (no DMF signals)")
+else()
+    message(STATUS "Build mode: ISR (hardware DMF interrupts)")
+endif()
 
 qt_standard_project_setup(REQUIRES 6.8)
 
@@ -64,6 +87,8 @@ qt_add_qml_module(appgwi
         SOURCES src/StandardCurveModel.cpp
         SOURCES include/ExperimentModel.hpp
         SOURCES src/ExperimentModel.cpp
+        SOURCES include/FluorescenceAnalyzer.hpp
+        SOURCES src/FluorescenceAnalyzer.cpp
         RESOURCES resources/templates/empty_experiment.yml
 )
 
@@ -87,7 +112,11 @@ target_link_libraries(appgwi PUBLIC
 )
 
 if(IS_RASPBERRY_PI)
-    target_link_libraries(appgwi PUBLIC ${WIRINGPI_LIBRARIES})
+    target_link_libraries(appgwi PUBLIC
+        -llccv
+        ${OpenCV_LIBS}
+        ${WIRINGPI_LIBRARIES}
+    )
 endif()
 
 include(GNUInstallDirs)

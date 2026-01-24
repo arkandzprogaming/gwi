@@ -21,6 +21,6 @@ class StateManager : public QObject
 
     ButtonStates m_buttonState;
 
-public slots:
+public Q_SLOTS:
     void changeCurrentState(const QString &currState);
 };

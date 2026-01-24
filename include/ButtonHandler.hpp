@@ -18,10 +18,10 @@ public:
     void handleRunStart();
     void handleRunStop();
 
-signals:
+Q_SIGNALS:
     void exitApp();
 
-public slots:
+public Q_SLOTS:
     void handleButtonClick(const QString &buttonName);
     void saveDataClick();
 };

@@ -2,28 +2,60 @@
 
 #include <QObject>
 #include <QTimer>
-//#include <QMutex> // Currently unused
+
+#ifdef HAVE_LCCV
+#include <lccv.hpp>
+#include <opencv2/opencv.hpp>
+#endif
 
 class HardwareController : public QObject {
 
     Q_OBJECT
 
+#ifdef HAVE_LCCV
+    // -- OpenCV and LCCV
+    cv::Mat m_backGreen;
+#endif
+
     // -- PWM-LED control
     const int m_ledPin;
-    int m_ledClockDivisor;  // Defaulted to 32 --> 640
+    int m_ledClockDivisor;      // Defaulted to 32 --> 640
     int m_ledPwmRange;          // Defaulted to 1024 --> 100
     int m_currentIntensity;
 
     // -- BH1750 sensor control
-    int m_i2cAdapter;
-    int m_i2cFd;
-    uint8_t m_sensorAddr;
-    int m_pcrCycle;
+    //int m_i2cAdapter;
+    //int m_i2cFd;
+    //uint8_t m_sensorAddr;
 
-    // -- Threading
+    // -- 5MP CMOS sensor control
+#ifdef HAVE_LCCV
+    lccv::PiCamera* m_cam;
+#endif
+    uint32_t m_camId;
+    int m_pcrCycle;
+    
+    // -- Timer to displace DMF interrupt comm
+    int m_maxPcrCycle;  // Get from ButtonHandler's QSharedPointer
+#ifdef USE_TIMER
     QTimer* m_sensorTimer;
-    //QMutex m_hardwareMutex;   // Currently unused
+#endif
+
+    // -- ISR
+    const int m_isrPin;
+#ifdef HAVE_WIRINGPI
+    static volatile int m_successInterruptCallbacks;
+    static HardwareController* s_instance;
+    static void isrCallback();
+#endif
+
+    // -- Debounce timing
+    static std::chrono::steady_clock::time_point s_lastIsrTime;
+    static constexpr std::chrono::milliseconds ISR_DEBOUNCE_MS{700};
+
+    // -- Hardware Boolean
     bool m_isInitialized;
+    bool m_backgroundCaptured;
 
 #ifdef HAVE_WIRINGPI
     /**
@@ -39,14 +71,15 @@ class HardwareController : public QObject {
     void writeLedPwm(int intensity);
 
     // -- Sensor iteraction methods
-    bool writeToSensor(uint8_t mode);
+    bool writeToSensor(cv::Mat &img);
 #endif
         
 public:
-    explicit HardwareController(uint8_t sensorAddr = 0x23, int adapter = 1, int ledPin = 18, QObject* parent = nullptr);
+    explicit HardwareController(uint32_t camId = 0, int isrPin = 17, int ledPin = 18, QObject* parent = nullptr);
     ~HardwareController();
 
     // -- BH1750 sensor operation modes
+    /*
     enum SensorMode : uint8_t {
         CONTINUOUSLY_H_RES_MODE = 0x10,
         CONTINUOUSLY_H_RES_MODE_2 = 0x11,
@@ -55,24 +88,29 @@ public:
         ONETIME_H_RES_MODE_2 = 0x21,
         ONETIME_L_RES_MODE = 0x23
     };
+    */
 
-public slots:
+public Q_SLOTS:
     bool begin();
-    void setLEDIntensity(int intensity);
-    void startSensorReading();
+    void setLedIntensity(int intensity);
+    void performSensorReading(bool isBackground = false);
+#ifdef USE_TIMER
+    void startSensorReading(int maxCycle);
     void stopSensorReading();
-    void performSensorReading();
-
-private slots:
-#ifdef HAVE_WIRINGPI
-    float readLuxFromSensor();
 #endif
-    void onSensorTimer();
 
-signals:
+private Q_SLOTS:
+#ifdef HAVE_WIRINGPI
+    double readMatrixFromSensor(cv::Mat &img, cv::Mat &backGreen);
+#endif
+#ifdef USE_TIMER
+    void onSensorTimer();
+#endif
+
+Q_SIGNALS:
     void hardwareInitialized(bool success);
     void ledIntensityChanged(int intensity);
-    void sensorDataReady(float lux);
+    void sensorDataReady(double msaMaxValue);
 #ifdef HAVE_WIRINGPI
     void errorOccurred(const QString& error);
 #endif

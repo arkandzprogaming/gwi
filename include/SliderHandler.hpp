@@ -18,11 +18,11 @@ public:
     SliderHandler(QSharedPointer<DataManager> dataManager, QObject* parent = nullptr);
     void setInitialSliderValue(int value);
 
-public slots:
+public Q_SLOTS:
     int getCurrentValue();
     void changeSliderValue(int currValue);
     void onUpdateTimer();
 
-signals:
+Q_SIGNALS:
     void ledIntensityRequested(int currValue);
 };

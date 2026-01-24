@@ -14,7 +14,7 @@ class DataManager : public QObject
     Q_OBJECT
 public:
     // List of intensity values for amplification plot and raw data
-    QList<float> m_intensityValues;
+    QList<double> m_intensityValues;
     int m_currentIntensityValuesIndex;
 
     // Current intensity in setup
@@ -107,7 +107,7 @@ public:
 public:
     DataManager() = default;
     DataManager(QMap<QString, fkyaml::node>& experiments);
-    QList<float>& getIntensityValuesList();
+    QList<double>& getIntensityValuesList();
     QList<QPair<double, int>>& getXyLogStandardCurve();
     QList<QString>& getExperimentNames();
     void save_data();
@@ -181,7 +181,7 @@ public:
     void removeExperiment(const QString experimentName);
     void addExperiment(const QString experimentName);
 
-public slots:
+public Q_SLOTS:
     Q_INVOKABLE void setMaxCycle(int maxCycle);
     Q_INVOKABLE void updateCurrentExperiment();
     // set every private members to the value of current experiment data
@@ -192,8 +192,8 @@ public slots:
     void resetIntensityValues();
     void resetStandardCurveData();
 
-    Q_INVOKABLE float getIntensityValueByIndex(int index);
-    void addSensorReading(float lux);
+    Q_INVOKABLE double getIntensityValueByIndex(int index);
+    void addSensorReading(double msaMaxValue);
     void setIntensityValuesSize(int size);
     Q_INVOKABLE int getIntensityValuesSize() const;
     Q_INVOKABLE int getStandardCurveDataSize() const;
@@ -205,11 +205,11 @@ public slots:
     Q_INVOKABLE void updateCurrentExperimentName(QString& currentExperimentName);
     void resetCurrentExperiment();
 
-private slots:
-    void updateSensorReading(float lux);
+private Q_SLOTS:
+    void updateSensorReading(double msaMaxValue);
 
-signals:
-    void intensityValuesUpdated(int index, float value);
+Q_SIGNALS:
+    void intensityValuesUpdated(int index, double value);
     void xyLogStandardCurveUpdated();
     void currentIntensityValuesIndexChanged(int newIndex);
     void maxCycleChanged();

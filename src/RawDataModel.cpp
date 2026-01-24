@@ -89,7 +89,7 @@ void RawDataModel::onIntensityValuesUpdated(int index, float value)
     QModelIndex startIndex = createIndex(tableRow, 1);
     QModelIndex endIndex = startIndex;
     
-    emit dataChanged(startIndex, endIndex, {Qt::DisplayRole});
+    Q_EMIT dataChanged(startIndex, endIndex, {Qt::DisplayRole});
 }
 
 void RawDataModel::refresh()

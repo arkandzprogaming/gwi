@@ -42,16 +42,22 @@ void ButtonHandler::handleButtonClick(const QString &buttonName)
 void ButtonHandler::handleRunStart()
 {
     m_dataManager->resetIntensityValues();
+    /*
     if (!m_hardwareController->begin()) {
         throw std::runtime_error("Main: Failed to initialize hardware!");
     }
+    */
 
-    m_hardwareController->startSensorReading();
+    #ifdef USE_TIMER
+    m_hardwareController->startSensorReading(m_dataManager->m_maxCycle);
+    #endif
 }
 
 void ButtonHandler::handleRunStop()
 {
+    #ifdef USE_TIMER
     m_hardwareController->stopSensorReading();
+    #endif
     m_dataManager->setCycleThreshold();
     m_dataManager->calculateStandardCurve();
 }
