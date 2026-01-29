@@ -6,22 +6,37 @@ FluorescenceAnalyzer::FluorescenceAnalyzer(QObject *parent) : QObject(parent)
 {
 }
 
+cv::Mat FluorescenceAnalyzer::normalizeRange(const cv::Mat &input)
+{
+    cv::Mat normalizedImage;
+
+    // Outputs any channel type of C_32F
+    // In this app, used for G-extracted matrices only
+    input.convertTo(normalizedImage, CV_32F, 1.0/255.0);
+    return normalizedImage;
+}
+
 cv::Mat FluorescenceAnalyzer::extractGreenChannel(const cv::Mat &input)
 {
     cv::Mat greenChannel;
-    if (input.empty()) return cv::Mat::zeros(HEIGHT, WIDTH, CV_8UC1);
+    cv::Mat normGreen32F;
+ 
+    if (input.empty()) return cv::Mat::zeros(HEIGHT, WIDTH, CV_32FC1);
     cv::extractChannel(input, greenChannel, 1);
 
-    return greenChannel;
+    normGreen32F = normalizeRange(greenChannel);
+
+    return normGreen32F;
 }
 
 cv::Mat FluorescenceAnalyzer::subtractBackground(const cv::Mat &imageG, const cv::Mat &backgroundG)
 {
     if (imageG.empty()) return imageG;
     
+    // This method accepts only G-channel-extracted matrices
     cv::Mat bg = backgroundG;
     if (bg.empty()) {
-        bg = cv::Mat::zeros(imageG.rows, imageG.cols, CV_8UC1);
+        bg = cv::Mat::zeros(imageG.rows, imageG.cols, CV_32FC1);
     }
 
     cv::Mat result;

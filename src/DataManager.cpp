@@ -291,7 +291,7 @@ void DataManager::updateSensorReading(double msaMaxValue)
     /* Reached if absolutely no exception is thrown */
     qDebug() << "DataManager: Updated m_currentIntensityValuesIndex"
              << m_currentIntensityValuesIndex
-             << "with value" << msaMaxValue << "/ 255";
+             << "with value" << msaMaxValue << "/ 1";
 
     Q_EMIT intensityValuesUpdated(m_currentIntensityValuesIndex, msaMaxValue);
 }

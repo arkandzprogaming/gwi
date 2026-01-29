@@ -64,7 +64,7 @@ HardwareController::HardwareController(uint32_t camId, int isrPin, int ledPin, Q
     m_cam->options->awb_gain_b = 0.6f;
     m_cam->options->contrast = 0.8f;
 
-    m_backGreen = cv::Mat::zeros(FluorescenceAnalyzer::HEIGHT, FluorescenceAnalyzer::WIDTH, CV_8UC1);
+    m_backGreen = cv::Mat::zeros(FluorescenceAnalyzer::HEIGHT, FluorescenceAnalyzer::WIDTH, CV_32FC1);
 
     s_instance = this;
 #endif
@@ -403,7 +403,7 @@ double HardwareController::readMatrixFromSensor(cv::Mat &img, cv::Mat &backGreen
     // -- Analyze
     double msaMaxValue = FluorescenceAnalyzer::pixelAverageAnalysis(processed, 6, 8);
 
-    qDebug() << "HardwareController: ROI avg. value detected by MSA:" << msaMaxValue << "/ 255";
+    qDebug() << "HardwareController: ROI avg. value detected by MSA:" << msaMaxValue << "/ 1";
     return msaMaxValue;
 }
 #else
