@@ -23,10 +23,11 @@
 using std::this_thread::sleep_for;
 using std::chrono::milliseconds;
 
-#ifdef USE_TIMER
+#ifdef HAVE_WIRINGPI
 HardwareController* HardwareController::s_instance = nullptr;
 std::chrono::steady_clock::time_point HardwareController::s_lastIsrTime{};
 volatile int HardwareController::m_successInterruptCallbacks = 0;
+volatile int HardwareController::m_debouncedInterruptCallbacks = 0;
 #endif
 
 /**
@@ -56,18 +57,20 @@ HardwareController::HardwareController(uint32_t camId, int isrPin, int ledPin, Q
     m_cam->options->framerate=5;
     m_cam->options->verbose=true;
 
-    m_cam->options->awb_gain_r = 1.5f; 
-    m_cam->options->awb_gain_b = 1.4f;
+    //m_cam->options->shutter=120000.0f;
+
     m_cam->options->setWhiteBalance(WhiteBalance_Modes::WB_CUSTOM);
+    m_cam->options->awb_gain_r = 0.7f; 
+    m_cam->options->awb_gain_b = 0.6f;
+    m_cam->options->contrast = 0.8f;
 
     m_backGreen = cv::Mat::zeros(FluorescenceAnalyzer::HEIGHT, FluorescenceAnalyzer::WIDTH, CV_8UC1);
 
     s_instance = this;
-    m_successInterruptCallbacks = 0;
 #endif
 
 #ifdef USE_TIMER
-    // Using sensor timer to dsplace DMF communication methods (for debugging)
+    // Using sensor timer to displace DMF communication methods (for debugging)
     m_sensorTimer = new QTimer(this);
     m_sensorTimer->setInterval(4000); 
     connect(m_sensorTimer, &QTimer::timeout, this, &HardwareController::onSensorTimer);
@@ -110,13 +113,17 @@ void HardwareController::isrCallback()
     auto now = std::chrono::steady_clock::now();
     auto elapsed = now - s_lastIsrTime;
     
-    if (elapsed < ISR_DEBOUNCE_MS) return;
+    if (elapsed < ISR_DEBOUNCE_MS) {
+        ++m_debouncedInterruptCallbacks;
+        qDebug() << "HardwareController: Interrupt from DMF debounced:" << m_successInterruptCallbacks << ". Moving on";
+        return;
+    }
     
-    // Update last call time
-    s_lastIsrTime = now;
-    ++m_successInterruptCallbacks;
-
     if (s_instance) {
+        // Update last call time
+        s_lastIsrTime = now;
+        ++m_successInterruptCallbacks;
+
         qDebug() << "HardwareController: Interrupt from DMF detected:" << m_successInterruptCallbacks << ". Performing acquisition...";
         QMetaObject::invokeMethod(s_instance, [=]() {
             s_instance->performSensorReading(false);
@@ -132,10 +139,11 @@ void HardwareController::isrCallback()
  */
 bool HardwareController::begin()
 {
-    //QMutexLocker locker(&m_hardwareMutex);    // Currently unused
-    
-    qDebug() << "HardwareController: Initializing...";
-    
+#ifndef USE_TIMER
+    qDebug() << "HardwareController: Initializing in ISR mode...";
+#else
+    qDebug() << "HardwareController: Initializing in Timer mode...";
+#endif
     if (!beginWiringPi()) {
         return false;
     }
@@ -162,7 +170,7 @@ bool HardwareController::begin()
  */
 bool HardwareController::beginWiringPi()
 {
-    if (wiringPiSetupGpio() == -1) {
+    if (wiringPiSetupPinType(WPI_PIN_BCM) == -1) {
         qFatal("HardwareController: Failed to initialize wiringPi");
     }
 
@@ -171,6 +179,7 @@ bool HardwareController::beginWiringPi()
         qFatal("HardwareController: Failed to setup ISR on pin %d", m_isrPin);
     }
     qDebug() << "HardwareController: ISR configured on GPIO" << m_isrPin;
+    qDebug() << "HardwareController: m_successInterruptCallbacks initialized at" << m_successInterruptCallbacks;
 #else
     qDebug() << "HardwareController: Using timer mode, ISR not configured";
 #endif
@@ -274,13 +283,21 @@ void HardwareController::startSensorReading(int maxCycle)
         qDebug() << "HardwareController: Started sensor reading";
     }
 }
+#endif
 
 void HardwareController::stopSensorReading()
 {
+#ifndef USE_TIMER
+    m_successInterruptCallbacks = 0;
+    m_debouncedInterruptCallbacks = 0;
+    qDebug() << "HardwareController: Stop button pressed in ISR mode. m_successInterruptCallbacks reset to" << m_successInterruptCallbacks;
+#else
     m_sensorTimer->stop();
     qDebug() << "HardwareController: Stopped sensor reading";
+#endif
 }
 
+#ifdef USE_TIMER
 void HardwareController::onSensorTimer()
 {
     if (m_pcrCycle++ < m_maxPcrCycle) {

@@ -600,6 +600,9 @@ void DataManager::resetCurrentExperiment()
     m_lastSaved = "";
     m_summary = "The resulting data are not reliable for quantification.";
 
+    // update the UI
+    Q_EMIT ledIntensityChanged();
+
     resetIntensityValues();
     resetStandardCurveData();
 

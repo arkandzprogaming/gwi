@@ -84,3 +84,4 @@ CMakeLists.txt.user*
 
 # Local libraries
 opencv-mobile-4.13.0-debian-bookworm-arm/
+opencv-mobile-4.13.0-debian-bookworm-aarch64/

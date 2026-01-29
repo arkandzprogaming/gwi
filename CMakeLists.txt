@@ -8,6 +8,13 @@ set(CMAKE_CXX_STANDARD 17)
 add_compile_definitions(QT_NO_KEYWORDS)
 find_package(Qt6 COMPONENTS Quick Charts VirtualKeyboard REQUIRED)
 
+# Use ccache if exist
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    message(STATUS "ccache enabled for gwi")
+endif()
+
 # Detect if building on a RPi
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
     set(IS_RASPBERRY_PI TRUE)

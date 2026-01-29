@@ -48,16 +48,16 @@ void ButtonHandler::handleRunStart()
     }
     */
 
-    #ifdef USE_TIMER
+#ifdef USE_TIMER
+    // Relevant only when Timer is used instead of ISR (DMF)
     m_hardwareController->startSensorReading(m_dataManager->m_maxCycle);
-    #endif
+#endif
 }
 
 void ButtonHandler::handleRunStop()
 {
-    #ifdef USE_TIMER
+    // stopSensorReading now relevant for both Timer and ISR modes
     m_hardwareController->stopSensorReading();
-    #endif
     m_dataManager->setCycleThreshold();
     m_dataManager->calculateStandardCurve();
 }

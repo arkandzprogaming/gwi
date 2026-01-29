@@ -8,7 +8,7 @@ SliderHandler::SliderHandler(QSharedPointer<DataManager> dataManager, QObject* p
     // Timer for delayed operations (avoiding too frequent PWM updates)
     m_updateTimer = new QTimer(this);
     m_updateTimer->setSingleShot(true);
-    m_updateTimer->setInterval(100); // 100ms delay for PWM
+    m_updateTimer->setInterval(300); // 300ms delay for PWM
     connect(m_updateTimer, &QTimer::timeout, this, &SliderHandler::onUpdateTimer);
 }
 
@@ -28,6 +28,7 @@ void SliderHandler::changeSliderValue(int currValue)
 void SliderHandler::onUpdateTimer()
 {
     // Emit signal to hardware controller
+    // qDebug() << "SliderHandler: Slider value changed to" << m_currentValue << ". Emitting value to HardwareController::setLedIntensity...";
     Q_EMIT ledIntensityRequested(m_currentValue);
 }
 

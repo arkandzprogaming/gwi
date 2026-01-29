@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QEvent>
+#include <QTouchEvent>
 #include <QKeyEvent>
 #include <QMouseEvent>
 #include <QDebug>

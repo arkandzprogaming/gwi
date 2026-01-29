@@ -45,13 +45,14 @@ class HardwareController : public QObject {
     const int m_isrPin;
 #ifdef HAVE_WIRINGPI
     static volatile int m_successInterruptCallbacks;
+    static volatile int m_debouncedInterruptCallbacks;
     static HardwareController* s_instance;
     static void isrCallback();
-#endif
 
     // -- Debounce timing
     static std::chrono::steady_clock::time_point s_lastIsrTime;
-    static constexpr std::chrono::milliseconds ISR_DEBOUNCE_MS{700};
+    static constexpr std::chrono::milliseconds ISR_DEBOUNCE_MS{1000};
+#endif
 
     // -- Hardware Boolean
     bool m_isInitialized;
@@ -96,8 +97,8 @@ public Q_SLOTS:
     void performSensorReading(bool isBackground = false);
 #ifdef USE_TIMER
     void startSensorReading(int maxCycle);
-    void stopSensorReading();
 #endif
+    void stopSensorReading();
 
 private Q_SLOTS:
 #ifdef HAVE_WIRINGPI

@@ -112,6 +112,7 @@ int main(int argc, char *argv[])
         QObject* runButton = rootItem->findChild<QObject*>("runButton");
 
         if (runButton) {
+            //qDebug() << "Main: runButton is found. Installing filter on the button...";
             RunButtonEventFilter* RunButtonFilter = new RunButtonEventFilter(&app);
             runButton->installEventFilter(RunButtonFilter); // Install filter directly on the button
         } else {

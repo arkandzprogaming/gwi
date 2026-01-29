@@ -2,10 +2,16 @@
 
 bool RunButtonEventFilter::eventFilter(QObject *watched, QEvent *event)
 {
-    if (event->type() == QEvent::MouseButtonRelease) {
+    if (event->type() == QEvent::MouseButtonRelease || event->type() == QEvent::TouchEnd) {
         QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
 
-        if (mouseEvent->button() == Qt::LeftButton) {
+        /*if (mouseEvent->button() == Qt::LeftButton) {*/
+        if (event->type() == QEvent::MouseButtonRelease) {
+            QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+            if (mouseEvent->button() != Qt::LeftButton) {
+                return QObject::eventFilter(watched, event);
+            }
+        }
             is_ready = !is_ready;
 
             QVariant currentText = watched->property("text");
@@ -26,7 +32,7 @@ bool RunButtonEventFilter::eventFilter(QObject *watched, QEvent *event)
                 watched->setProperty("text", newText);
             }
 
-        }
+        //}
     }
     return QObject::eventFilter(watched, event);
 }

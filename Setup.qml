@@ -42,6 +42,7 @@ ColumnLayout {
                 if (!pressed && dataManager && typeof dataManager !== "undefined") {
                     dataManager.updateCurrentExperiment()
                     dataManager.loadCurrentExperiment()
+                    sliderHandler.changeSliderValue(dataManager.ledIntensity)
                 }
             }
         }
@@ -87,7 +88,12 @@ ColumnLayout {
 
     RowLayout {
         Text {
-            text: "Light Intensity Level: " + sliderValue + " %"
+            text: {
+                if (typeof dataManager !== "undefined" && dataManager) {
+                    return "Light Intensity Level: " + dataManager.ledIntensity + " %"
+                }
+                return ""
+            }
             font.pointSize: 24
             leftPadding: 30
         }
