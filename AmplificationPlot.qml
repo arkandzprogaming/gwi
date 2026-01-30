@@ -53,18 +53,11 @@ ColumnLayout {
                 min: 0
             }
 
-            ScatterSeries {
-                id: scatterSeries
+            SplineSeries {
+                id: lineSeries
                 name: "intensity"
                 axisX: axisX
                 axisY: axisY
-                
-                // Customize dot appearance
-                markerSize: 10
-                markerShape: ScatterSeries.MarkerShapeCircle
-                color: "blue"
-                borderColor: "black"
-                borderWidth: 1
             }
 
             // Mouse Handling for Pan & Wheel Zoom
@@ -119,7 +112,7 @@ ColumnLayout {
         VXYModelMapper {
             id: modelMapper
             model: rawDataModel
-            series: scatterSeries
+            series: lineSeries
             xColumn: 0
             yColumn: 1
             firstRow: 1
