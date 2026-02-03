@@ -72,7 +72,7 @@ HardwareController::HardwareController(uint32_t camId, int isrPin, int ledPin, Q
 #ifdef USE_TIMER
     // Using sensor timer to displace DMF communication methods (for debugging)
     m_sensorTimer = new QTimer(this);
-    m_sensorTimer->setInterval(4000); 
+    m_sensorTimer->setInterval(90000); 
     connect(m_sensorTimer, &QTimer::timeout, this, &HardwareController::onSensorTimer);
 #endif
 
