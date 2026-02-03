@@ -23,7 +23,7 @@ git clone https://github.com/arkandzprogaming/gwi.git
 
 ### 2.2 WiringPi
 
-This project uses the [WiringPi](https://github.com/WiringPi/WiringPi.git) library to access the GPIO pins of the Raspberry Pi Zero 2 W.  
+This project uses the [WiringPi](https://github.com/WiringPi/WiringPi.git) library to access the GPIO pins of the Raspberry Pi 4 model B.  
 The [installation script](https://github.com/WiringPi/WiringPi?tab=readme-ov-file#from-source) provided by the official repository can be used to build the library from source, as shown below.
 
 During the development of this project, WiringPi version **3.16** was built from source on an ARM-based Debian Bookworm system.
@@ -39,17 +39,17 @@ mv debian-template/wiringpi-3.16.deb .
 sudo apt install ./wiringpi-3.16.deb
 ```
 
-### 2.2 OpenCV Mobile
+### 2.3 OpenCV Mobile
 
 The source files can be downloaded directly according to the OS and system architecture being used [here](https://github.com/nihui/opencv-mobile.git). During development of this project, the aarch64 Bookworm version was used, [go to Environment Setup](#3-environment-setup) for more details.
 
 After installation having downloaded the zipped source files, unzip them into the project directory (the same directory as the CMakelists.txt file). The latter file may need to be conditioned to include/link the specific opencv-mobile version being used.
 
-### 2.3 LCCV
+### 2.4 LCCV
 
 LCCV is a C++ Libcamera wrapper library for use with OpenCV. Following the instructions in its [official README](https://github.com/kbarni/LCCV?tab=readme-ov-file#building-and-installing), one ought to build and install the repository, preferably outside of this project directory. Make sure all prerequisites are thoroughly considered.
 
-### 2.4 Qt6- plugins
+### 2.5 Qt6- plugins
 
 All Qt6 libraries and plugins required by the CMakeLists.txt file need to be installed using APT. At the time of the development, Qt version 6.4.2 is used.
 
@@ -57,9 +57,9 @@ All Qt6 libraries and plugins required by the CMakeLists.txt file need to be ins
 
 ### 3.1 Deployment environment
 
-OS              : aarch64 Debian 12 (Bookworm) 
-Kernel          : 6.12.62+rpt-ri-v8
-Display backend : X11
+1. OS              : aarch64 Debian 12 (Bookworm) 
+2. Kernel          : 6.12.62+rpt-ri-v8
+3. Display backend : X11
 
 ### 3.2 User setup
 
